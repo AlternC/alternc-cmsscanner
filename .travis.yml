@@ -13,9 +13,12 @@ before_install:
     - curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | sudo gpg --dearmor -o /usr/share/keyrings/githubcli-archive-keyring.gpg
     - echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | sudo tee /etc/apt/sources.list.d/github-cli.list > /dev/null
     - sudo apt-get -qq update
-    - sudo apt-get install -y debhelper devscripts fakeroot build-essential po-debconf gh
+    - sudo apt-get install -y debhelper devscripts fakeroot build-essential po-debconf gh jq
     - openssl aes-256-cbc -K $encrypted_2155243bff9e_key -iv $encrypted_2155243bff9e_iv -in 077CC9F2.gpg.enc -out 077CC9F2.gpg -d
     - gpg --import 077CC9F2.gpg
+    - mkdir -p src/usr/bin/
+    - wget https://${GITHUB_TOKEN}@api.github.com/repos/CMS-Garden/cmsscanner/releases/latest -O - | jq '.assets[] | select(.name == "cmsscanner.phar").browser_download_url' |xargs wget -O src/usr/bin/cmsscanner
+    - chmod +x src/usr/bin/cmsscanner
 install:
     - debuild '-k9D1DC8DD077CC9F2'
 deploy:
