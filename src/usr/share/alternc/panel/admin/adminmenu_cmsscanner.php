@@ -1,0 +1,1 @@
+<li class="lst2"><a href="cmsscanner.php"><?php __("Scan hosted CMS"); ?></a></li>
