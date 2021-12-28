@@ -58,6 +58,7 @@ function get_domain_list($uid = -1)
 
 $members = $admin->get_list();
 $content = [];
+$paths_scanned = [];
 
 foreach($members as $member) {
     $path = [];
@@ -71,6 +72,15 @@ foreach($members as $member) {
         foreach($domain_full['sub'] as $subdomain) {
             if ('DIRECTORY' == $dom->domains_type_target_values($subdomain['type'])) {
                 $path = getuserpath($member['login'])."/".$subdomain['valeur']. " ";
+
+                if (!empty($paths_scanned[$path])) {
+                    foreach($paths_scanned[$path] as $path_scanned) {
+                        $content[$member['login']][$path_scanned]['fqdn'] = $subdomain['fqdn'];
+                    }
+                    continue;
+                }
+
+                $path_scanned[$path] = [];
 
                 $out = array();
                 exec("/usr/bin/cmsscanner cmsscanner:detect --report=/tmp/cmsreport_".$member['login'].".json --versions ".$path, $out);
