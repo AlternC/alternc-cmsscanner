@@ -75,12 +75,12 @@ foreach($members as $member) {
 
                 if (!empty($paths_scanned[$path])) {
                     foreach($paths_scanned[$path] as $path_scanned) {
-                        $content[$member['login']][$path_scanned]['fqdn'] = $subdomain['fqdn'];
+                        $content[$member['login']][$path_scanned]['fqdn'][] = $subdomain['fqdn'];
                     }
                     continue;
                 }
 
-                $path_scanned[$path] = [];
+                $paths_scanned[$path] = [];
 
                 $out = array();
                 exec("/usr/bin/cmsscanner cmsscanner:detect --report=/tmp/cmsreport_".$member['login'].".json --versions ".$path, $out);
@@ -89,25 +89,19 @@ foreach($members as $member) {
                 $cmsscanner_result = json_decode($json)[0];
 
                 if(empty($cmsscanner_result)) {
-                    if (empty($content[$member['login']][$path])) {
-                        $content[$member['login']][$path] = [
-                            'cms' => 'unknown',
-                            'version' => 'unknown',
-                            'fqdn' => [$subdomain['fqdn']]
-                        ];
-                    } else {
-                        $content[$member['login']][$path]['fqdn'][] = $subdomain['fqdn'];
-                    }
+                    $content[$member['login']][$path] = [
+                        'cms' => 'unknown',
+                        'version' => 'unknown',
+                        'fqdn' => [$subdomain['fqdn']]
+                    ];
+                    $paths_scanned[$path][] = $path;
                 } else {
-                    if (empty($content[$member['login']][$cmsscanner_result->path])) {
-                        $content[$member['login']][$cmsscanner_result->path] = [
-                            'cms' => $cmsscanner_result->name,
-                            'version' => $cmsscanner_result->version,
-                            'fqdn' => [$subdomain['fqdn']]
-                        ];
-                    } else {
-                        $content[$member['login']][$cmsscanner_result->path]['fqdn'][] = $subdomain['fqdn'];
-                    }
+                    $content[$member['login']][$cmsscanner_result->path] = [
+                        'cms' => $cmsscanner_result->name,
+                        'version' => $cmsscanner_result->version,
+                        'fqdn' => [$subdomain['fqdn']]
+                    ];
+                    $paths_scanned[$path][] = $cmsscanner_result->path;
                 }
             }
         }
