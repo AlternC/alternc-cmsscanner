@@ -58,6 +58,7 @@ function get_domain_list($uid = -1)
 
 $members = $admin->get_list();
 $content = [];
+$paths_scanned = [];
 
 foreach($members as $member) {
     $path = [];
@@ -72,6 +73,15 @@ foreach($members as $member) {
             if ('DIRECTORY' == $dom->domains_type_target_values($subdomain['type'])) {
                 $path = getuserpath($member['login'])."/".$subdomain['valeur']. " ";
 
+                if (!empty($paths_scanned[$path])) {
+                    foreach($paths_scanned[$path] as $path_scanned) {
+                        $content[$member['login']][$path_scanned]['fqdn'][] = $subdomain['fqdn'];
+                    }
+                    continue;
+                }
+
+                $paths_scanned[$path] = [];
+
                 $out = array();
                 exec("/usr/bin/cmsscanner cmsscanner:detect --report=/tmp/cmsreport_".$member['login'].".json --versions ".$path, $out);
             
@@ -79,19 +89,20 @@ foreach($members as $member) {
                 $cmsscanner_result = json_decode($json)[0];
 
                 if(empty($cmsscanner_result)) {
-                    $content[$member['login']][$subdomain['fqdn']] = [
+                    $content[$member['login']][$path] = [
                         'cms' => 'unknown',
                         'version' => 'unknown',
-                        'path' => $path
+                        'fqdn' => [$subdomain['fqdn']]
                     ];
+                    $paths_scanned[$path][] = $path;
                 } else {
-                    $content[$member['login']][$subdomain['fqdn']] = [
+                    $content[$member['login']][$cmsscanner_result->path] = [
                         'cms' => $cmsscanner_result->name,
                         'version' => $cmsscanner_result->version,
-                        'path' => $cmsscanner_result->path
+                        'fqdn' => [$subdomain['fqdn']]
                     ];
+                    $paths_scanned[$path][] = $cmsscanner_result->path;
                 }
-
             }
         }
         $dom->unlock();
@@ -115,23 +126,25 @@ foreach($members as $member) {
     </tr>
 </thead>
 <tbody>
-<?php foreach($content as $member => $sub_domains) { ?>
-    <?php foreach($sub_domains as $fqdn => $sub_domain) { ?>
+<?php foreach($content as $member => $paths) { ?>
+    <?php foreach($paths as $path => $cms) { ?>
         <tr class="lst">
             <td>
                 <?php echo $member; ?>
             </td>
             <td>
-                <?php echo $fqdn; ?>
+                <?php foreach($cms['fqdn'] as $fqdn) {
+                    echo $fqdn."<br/>";
+                } ?>
             </td>            
             <td>
-                <?php echo $sub_domain['cms']; ?>
+                <?php echo $cms['cms']; ?>
             </td>
             <td>
-                <?php echo $sub_domain['version']; ?>
+                <?php echo $cms['version']; ?>
             </td>
             <td>
-                <?php echo $sub_domain['path']; ?>
+                <?php echo $path; ?>
             </td>
         </tr>
     <?php } ?>
