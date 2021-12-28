@@ -9,12 +9,7 @@ Standards-Version: 3.9.8
 
 Package: alternc-cmsscanner
 Architecture: all
-Depends: apt-utils,
-       , php-cli
-       , debconf
-       , alternc (>= 3.5.0~rc1),
-       , python-certbot-apache
-       , ${misc:Depends}
+Depends: alternc (>= 3.3)
 Description: Scan CMS hosted by AlternC
  AlternC is a mutualized hosting software manager for Linux.
  It allows you to manage your websites, domains, ftp, emails, aliases,
