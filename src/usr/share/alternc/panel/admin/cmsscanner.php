@@ -23,8 +23,8 @@
 
  To read the license please visit http://www.gnu.org/copyleft/gpl.html
  ----------------------------------------------------------------------
- Original Author of file:
- Purpose of file:
+ Original Author of file: 
+ Purpose of file: the CMSScanner scans for known php programs and tell their version.
  ----------------------------------------------------------------------
 */
 require_once("../class/config.php");

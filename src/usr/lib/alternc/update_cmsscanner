@@ -1,0 +1,18 @@
+#!/usr/bin/php -q
+<?php
+
+/*
+  Launch the cmsscanner crontab
+  it can be launched every 5 minutes (with a lock)
+*/
+
+if (posix_getuid()==0) {
+    echo "FATAL: this crontab MUST NOT be launched as root, since it doesn't need to access anything system-related.\n";
+    exit();
+}
+
+require("/usr/share/alternc/panel/class/config_nochk.php");
+$admin->enabled=1;
+
+$cmsscanner->cron_update();
+

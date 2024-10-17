@@ -1,3 +1,9 @@
+alternc-cmsscanner (0.0.2) stable; urgency=low
+
+  * Change the CMSScanner, upgrade the presentation, add the background job.
+
+ -- Benjamin Sonntag <benjamin@sonntag.fr>  Tue, 16 Oct 2024 16:50:00 +0200
+
 alternc-cmsscanner (0.0.1) stable; urgency=low
 
   * Project initialization
