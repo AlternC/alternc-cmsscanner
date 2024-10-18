@@ -28,6 +28,13 @@ class m_cmsscanner {
 
     const LAST_SCAN_FILE="/var/lib/alternc/panel/cmsscanner-last-scan-time";
     const USER_SCAN_FILE="/var/lib/alternc/panel/cmsscanner-user-scan.json";
+
+    const ACTION_INSERT=0;
+    const ACTION_UPDATE=1;
+    const ACTION_DELETE=2;
+    const ACTION_VHOSTS=3;
+    
+    public $cmslist=[];
     
     /* ----------------------------------------------------------------- */
     /**
@@ -48,20 +55,32 @@ class m_cmsscanner {
     /* ----------------------------------------------------------------- */
     /**
      * list the software found during the last scan for one (or all) user)
+     * If user is 0 (for all users) you can filter by cms using $cmsfilter
+     * also, $this->cmslist is populated with a hash of cms => count
      */
-    function get_list($user=0) {
+    function get_list($user=0,$cmsfilter="") {
         global $db;
         $sql=""; $fields=""; $order="";
         if ($user==0) {
             $fields=",m.login";
             $sql=", membres m  WHERE m.uid=c.uid ";
+            if ($cmsfilter) $sql.=" AND cms='".addslashes($cmsfilter)."' ";
             $order="m.login, ";
+
+            $db->query("SELECT count(*) AS ct, cms FROM cmsscanner GROUP BY cms;");
+            $this->cmslist=[];
+            while ($db->next_record()) {
+                $this->cmslist[$db->Record['cms']]=$db->Record['ct'];
+            }
+
         } else {
             $sql=" WHERE c.uid=".intval($user)." ";            
         }
         $db->query("SELECT c.* $fields FROM cmsscanner c $sql ORDER BY $order c.folder;");
         $cms=[];
-        while ($db->next_record()) $cms[]=$db->Record;
+        while ($db->next_record()) {
+            $cms[]=$db->Record;
+        }
         return $cms;
     }
 
@@ -80,7 +99,7 @@ class m_cmsscanner {
         } else {
             $sql=" WHERE c.uid=".intval($user)." ";            
         }
-        $db->query("SELECT c.* $fields FROM cmsscanner_history c $sql ORDER BY $order c.cdate DESC;");
+        $db->query("SELECT c.* $fields FROM cmsscanner_history c $sql ORDER BY $order c.sdate DESC;");
         $cms=[];
         while ($db->next_record()) $cms[]=$db->Record;
         return $cms;
@@ -91,20 +110,25 @@ class m_cmsscanner {
     /**
      * function called when a user want to rescan its folder.
      */
-    function please_scan() {
+    function please_scan($all=false) {
         global $cuid;
-        $scan=[];
-        if (is_file(self::USER_SCAN_FILE)) {
-            $scan=@json_decode(@file_get_contents(self::USER_SCAN_FILE),true);
-            if (!is_array($scan)) $scan=[];
-        }
-        if (!in_array($cuid,$scan)) {
-            $scan[]=$cuid;
-            file_put_contents(self::USER_SCAN_FILE,json_encode($scan));
+        if ($all) {
+            @unlink(self::LAST_SCAN_FILE);
+            return true;
         } else {
-            return false;
+            $scan=[];
+            if (is_file(self::USER_SCAN_FILE)) {
+                $scan=@json_decode(@file_get_contents(self::USER_SCAN_FILE),true);
+                if (!is_array($scan)) $scan=[];
+            }
+            if (!in_array($cuid,$scan)) {
+                $scan[]=$cuid;
+                file_put_contents(self::USER_SCAN_FILE,json_encode($scan));
+            } else {
+                return false;
+            }
+            return true;
         }
-        return true;
     }
 
     
@@ -119,15 +143,23 @@ class m_cmsscanner {
         global $db;
         // first : shall we scan because cron? 
         $cron = intval(variable_get("cmsscanner_cron"));
-        if ($cron!=0 /*&& date("G")==4*/) { // scan by cron done at 4am.
+        if ($cron!=0) {
             $acron=[1=>86400, 2=>86400*7, 3=>86400*30];
-            if (!is_file(self::LAST_SCAN_FILE) || (time()-filemtime(self::LAST_SCAN_FILE))>$acron[$cron]) {
+            if ( // scan if the LAST_SCAN_FILE does NOT exist OR if it's 4am and the last scan is too old.
+                !is_file(self::LAST_SCAN_FILE)
+                    || ( ((time()-filemtime(self::LAST_SCAN_FILE))>$acron[$cron]) && date("G")==4 )
+            ) {
                 $db->query("SELECT uid FROM membres ORDER BY uid;");
                 $uids=[];
                 while($db->next_record()) $uids[]=$db->Record["uid"];
                 foreach($uids as $uid) {
-                    $this->do_scan($uid);
+                    $this->scan_cms($uid);
+                    $this->scan_vhosts($uid);
                 }
+                // now purge any information on non-existing account.
+                $db->query("DELETE c FROM cmsscanner c LEFT JOIN membres u ON u.uid=c.uid WHERE u.uid IS NULL;");
+                $db->query("DELETE c FROM cmsscanner_history c LEFT JOIN membres u ON u.uid=c.uid WHERE u.uid IS NULL;");
+                
                 touch(self::LAST_SCAN_FILE);
                 // since we scanned **everything** no need to scan any user ;)
                 @unlink(self::USER_SCAN_FILE);
@@ -139,7 +171,8 @@ class m_cmsscanner {
             // scan requested, do them
             $users=@json_decode(file_get_contents(self::USER_SCAN_FILE),true);
             foreach($users as $one) {
-                $this->do_scan($one);
+                $this->scan_cms($one);
+                $this->scan_vhost($one);
             }
             unlink(self::USER_SCAN_FILE);
         }
@@ -152,7 +185,7 @@ class m_cmsscanner {
      * and store the report in the database.
      * should be called as alterncpanel by the cron function.
      */
-    function do_scan($user) {
+    function scan_cms($user) {
         global $db;
         $user=intval($user);
         // scan from ALTERNC_HTML/u/user/
@@ -176,7 +209,9 @@ class m_cmsscanner {
                 if (substr($mat[3],0,strlen($root))==$root) {
                     // we can have more than one CMS in a SINGLE FOLDER !!
                     // but only 1 VERSION
-                    $cms[substr($mat[3],strlen($root))][]=[$mat[1],$mat[2]];
+                    $f=substr($mat[3],strlen($root));
+                    if (!$f) $f="/"; // CMS at the root!
+                    $cms[$f][]=[$mat[1],$mat[2]];
                 }
             }
         }
@@ -204,13 +239,18 @@ class m_cmsscanner {
                             } else {
                                 // will fill history with a VERSION UPDATE event.
                                 $isupdate=true;
+                                $oldversion=$curi[1];
                             }
                         }
                     }
                 }
                 if (!$found) {
                     $db->query("INSERT INTO cmsscanner SET uid=$user, folder='".addslashes($folder)."', cms='".addslashes($cmsi[0])."', version='".addslashes($cmsi[1])."';");
-                    
+                    if ($isupdate) {
+                        $db->query("INSERT INTO cmsscanner_history SET uid=$user, folder='".addslashes($folder)."', cms='".addslashes($cmsi[0])."', version='".addslashes($cmsi[1])."', action=".self::ACTION_UPDATE.",oldversion='".addslashes($oldversion)."';");
+                    } else {
+                        $db->query("INSERT INTO cmsscanner_history SET uid=$user, folder='".addslashes($folder)."', cms='".addslashes($cmsi[0])."', version='".addslashes($cmsi[1])."', action=".self::ACTION_INSERT.";");
+                    }
 }
             }
         } // array compare from cms to cur (insert)
@@ -225,12 +265,18 @@ class m_cmsscanner {
                         if ($cmsi[0]==$curi[0]) {
                             if ($cmsi[1]==$curi[1]) {
                                 $found=true; break;
+                            } else {
+                                $isupdate=true;
                             }
                         }
                     }
                 }
-                if (!$found)
+                if (!$found) {
                     $db->query("DELETE FROM cmsscanner WHERE uid=$user AND folder='".addslashes($folder)."' AND cms='".addslashes($curi[0])."' AND version='".addslashes($curi[1])."';");
+                    if (!$isupdate) {
+                        $db->query("INSERT INTO cmsscanner_history SET uid=$user, folder='".addslashes($folder)."', cms='".addslashes($curi[0])."', version='".addslashes($curi[1])."', action=".self::ACTION_DELETE.";");
+                    }
+                }
             }
         } // array compare from cur to cms (delete)
         
@@ -238,6 +284,41 @@ class m_cmsscanner {
         // we will update the vhosts pointing there in ANOTHER function (because that's complicated)
     } // do_scan
 
+
+    
+    /* ----------------------------------------------------------------- */
+    /**
+     * update one user's list of cms found to fill the "vhost" field.
+     * only update what's necessary.
+     * should be called as alterncpanel by the cron function.
+     */
+    function scan_vhosts($user) {
+        global $db;
+        $user=intval($user);
+        $db->query("SELECT * FROM cmsscanner WHERE uid=$user;");
+        $list=[];
+        while ($db->next_record()) {
+            $list[]=$db->Record;
+        }
+        foreach($list as $one) {
+            $vhosts=[];
+            // this query is complicated. It searches for vhosts pointing to the folder where we found a CMS.
+            // the LIKE is inverted: we search "valeur" values (so: a directory) that BEGINS with the CMS folder path, so the CMS is either at or below this URL.
+            $db->query("SELECT sd.sub,d.domaine,sd.valeur FROM sub_domaines sd, domaines d, domaines_type dt WHERE sd.domaine=d.domaine AND d.compte=$user AND dt.name=sd.type AND dt.target='DIRECTORY' AND '".addslashes(rtrim($one["folder"],'/').'/')."' LIKE CONCAT(sd.valeur,'%');");
+            while ($db->next_record()) {
+                $dir=ltrim(substr($db->Record["valeur"],strlen(rtrim($one["folder"],"/"))),'/'); // search the subfolder
+                $vhosts[]=$db->Record['sub'].(($db->Record['sub'])?".":"").$db->Record["domaine"]."/".$dir;
+            }
+            sort($vhosts);
+            $vhosts=implode("\n",$vhosts);
+            if ($vhosts!=$one["vhosts"]) {
+                $db->query("UPDATE cmsscanner SET vhosts='".addslashes($vhosts)."' WHERE id=".$one["id"].";");
+                $db->query("INSERT INTO cmsscanner_history SET uid=$user, folder='".addslashes($one['folder'])."', cms='".addslashes($one['cms'])."', version='".addslashes($one['version'])."', action=".self::ACTION_VHOSTS.",oldversion='', oldvhosts='".addslashes($one['vhosts'])."', vhosts='".addslashes($vhosts)."';");
+            }
+            
+        } // for each cms
+        
+    } // scan_vhosts
     
 
 

@@ -1,1 +1,1 @@
-<li class="lst2"><a href="cmsscanner.php"><?php __("Scan hosted CMS"); ?></a></li>
+<a href="cmsscanner_admin.php"><?php __("Software Scanner Server-wide"); ?></a>

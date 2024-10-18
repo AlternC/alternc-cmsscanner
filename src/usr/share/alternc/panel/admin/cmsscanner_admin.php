@@ -28,17 +28,31 @@
  ----------------------------------------------------------------------
 */
 require_once("../class/config.php");
-include("head.php");
+
+if (!$admin->enabled) {
+    include("head.php");
+    $msg->raise("ERROR", "admin", _("This page is restricted to authorized staff"));
+    echo $msg->msg_html_all();
+    include('foot.php');
+    exit();
+}
 
 $updated=(isset($_GET["updated"]) && $_GET["updated"]==1);
 if (isset($_POST["action"]) && $_POST["action"]=="rescan") {
-    if ($cmsscanner->please_scan()) {
-        header("Location: cmsscanner_user.php?updated=1");
+    if ($cmsscanner->please_scan(true)) {
+        header("Location: /cmsscanner_admin.php?updated=1");
         exit();
     }
 }
 
-$list = $cmsscanner->get_list($cuid);
+include("head.php");
+
+$cmsfilter="";
+if (isset($_GET["filtercms"]) && $_GET["filtercms"]) {
+    $cmsfilter=trim($_GET["filtercms"]);
+}
+
+$list = $cmsscanner->get_list(0,$cmsfilter);
 
 function vhost2url($v) {
     $s="";
@@ -55,20 +69,35 @@ function vhost2url($v) {
 <?php
     }
 ?>
-    <p><?php __("This page show the hosted software that we detected on your account, along with their versions, to help you cleaning your web space and update software that would need it. If you want to rescan your account, click the 'rescan now' button. The rescan will take place 5 minutes later."); ?></p>
+    <p><?php __("This page show the hosted software that we detected on your server, along with their versions, to help your users to clean their web space and update software that would need it. If you want to rescan your entire server, click the 'rescan now' button. The rescan will take place 5 minutes later and may take a few minutes."); ?></p>
 
    <p>
-     <form method="post" action="cmsscanner_user.php">
+     <form method="post" action="cmsscanner_admin.php">
 <?php csrf_get(); ?>
        <input type="hidden" name="action" value="rescan">
      <input class="inb" type="submit" value="<?php __("Rescan now"); ?>"/> &nbsp;
-<a href="cmsscanner_history.php" class="inb"><?php __("View software history"); ?></a>
+<a href="cmsscanner_admin_history.php" class="inb"><?php __("View software history"); ?></a>
      </form>
    </p>
-     
+
+    <p>
+    <form method="get" action="cmsscanner_admin.php" id="filter" name="filter">
+<select class="inl" name="filtercms" id="filtercms" onchange="document.forms['filter'].submit();">
+       <option value=""><?php __("-- Filter on Software Name --"); ?></option>
+<?php
+           foreach($cmsscanner->cmslist as $cms=>$count) {
+               echo "<option value=\"".htmlentities($cms)."\"";
+               if ($cmsfilter==$cms) echo " selected=\"selected\"";
+               echo ">".$cms." (".$count.")</option>";
+           }
+?></select><input class="inb" type="submit" name="go" value="<?php __("Filter"); ?>"/></form>
+       </p>
+       
+    
 <table class="tlist" id="dom_list_table">
 <thead>
     <tr>
+        <th><?php __("Account"); ?></th>
         <th><?php __("Software"); ?></th>
         <th><?php __("Version"); ?></th>
         <th><?php __("Path"); ?></th>
@@ -80,13 +109,16 @@ function vhost2url($v) {
 <?php foreach($list as $one) { ?>
         <tr class="lst">
             <td>
+                <a href="/adm_login.php?id=<?php echo $one['uid']; ?>" title="<?php __("Connect as"); ?>"><?php echo $one['login']; ?></a>
+            </td>
+            <td>
                 <?php echo $one['cms']; ?>
             </td>
             <td>
                 <?php echo $one['version']; ?>
             </td>
             <td>
-                 <a href="bro_main.php?R=<?php echo urlencode($one['folder']); ?>"/><?php ehe($one['folder']); ?></a>
+                <?php ehe(ALTERNC_HTML."/".substr($one['login'],0,1)."/".$one['login'].$one['folder']); ?>
             </td>
             <td>
                  <?php echo vhost2url($one['vhosts']);   ?>

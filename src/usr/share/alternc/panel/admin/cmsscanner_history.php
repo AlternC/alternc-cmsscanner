@@ -30,70 +30,56 @@
 require_once("../class/config.php");
 include("head.php");
 
-$updated=(isset($_GET["updated"]) && $_GET["updated"]==1);
-if (isset($_POST["action"]) && $_POST["action"]=="rescan") {
-    if ($cmsscanner->please_scan()) {
-        header("Location: cmsscanner_user.php?updated=1");
-        exit();
-    }
-}
+$list = $cmsscanner->get_history($cuid);
 
-$list = $cmsscanner->get_list($cuid);
-
-function vhost2url($v) {
-    $s="";
-    $v=explode("\n",$v);
-    foreach($v as $u) $s.="<a href=\"http://".$u."\">$u</a><br>";
-    return $s;
-}
+$changes=[0=>_("Detected"), 1=>_("Updated"), 2=>_("Removed"), 3=>_("Vhosts change")];
 
 ?>
-<h3><?php __("Software Scanner"); ?></h3>
-<?php
-    if ($updated) {
-        ?><p class="alert alert-info"><?php __("Your software list will be updated soon. Please come back in a few minutes."); ?></p>
-<?php
-    }
-?>
-    <p><?php __("This page show the hosted software that we detected on your account, along with their versions, to help you cleaning your web space and update software that would need it. If you want to rescan your account, click the 'rescan now' button. The rescan will take place 5 minutes later."); ?></p>
-
-   <p>
-     <form method="post" action="cmsscanner_user.php">
-<?php csrf_get(); ?>
-       <input type="hidden" name="action" value="rescan">
-     <input class="inb" type="submit" value="<?php __("Rescan now"); ?>"/> &nbsp;
-<a href="cmsscanner_history.php" class="inb"><?php __("View software history"); ?></a>
-     </form>
-   </p>
-     
+<h3><?php __("Software Scanner History"); ?></h3>
+    <p><?php __("This page show the 6-months history of changes we saw in the hosted software detected on your account, along with their version."); ?></p>
+<p>
+        <a href="cmsscanner_user.php" class="inb"><?php __("View current software list"); ?></a>
+</p>
 <table class="tlist" id="dom_list_table">
 <thead>
     <tr>
+        <th><?php __("Date of change"); ?></th>
+        <th><?php __("Change"); ?></th>
         <th><?php __("Software"); ?></th>
         <th><?php __("Version"); ?></th>
         <th><?php __("Path"); ?></th>
-        <th><?php __("Hosted at"); ?></th>
-        <th><?php __("Scanned date"); ?></th>
+        <th colspan="2"><?php __("Hosted at"); ?></th>
     </tr>
 </thead>
 <tbody>
 <?php foreach($list as $one) { ?>
         <tr class="lst">
             <td>
+<?php echo format_date(_('%3$d-%2$d-%1$d %4$d:%5$d'),$one['sdate']); ?>
+            </td>
+            <td>
+                <?php echo $changes[$one['action']]; ?>
+            </td>
+            <td>
                 <?php echo $one['cms']; ?>
             </td>
             <td>
-                <?php echo $one['version']; ?>
+                <?php
+                 if ($one['action']==$cmsscanner::ACTION_UPDATE) echo _("Old version: ").$one['oldversion']."<br/>"._("New version: ");
+                 echo $one['version']; ?>
             </td>
             <td>
-                 <a href="bro_main.php?R=<?php echo urlencode($one['folder']); ?>"/><?php ehe($one['folder']); ?></a>
+                 <?php ehe($one['folder']); ?>
             </td>
-            <td>
-                 <?php echo vhost2url($one['vhosts']);   ?>
-            </td>
-            <td>
-<?php echo format_date(_('%3$d-%2$d-%1$d %4$d:%5$d'),$one['sdate']); ?>
-            </td>
+
+<?php
+                  if ($one['action']==$cmsscanner::ACTION_VHOSTS) {
+                      echo "<td>"._("Old vhosts: ")."<br>".nl2br($one['oldvhosts'])."</td>";
+                      echo "<td>"._("New vhosts: ")."<br>".nl2br($one['vhosts'])."</td>";
+                  } else {
+                      echo "<td colspan=\"2\">".$one['vhosts']."&nbsp;</td>";
+                  }
+    ?>
         </tr>
     <?php } ?>
 
