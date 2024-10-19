@@ -1,4 +1,4 @@
-alternc-cmsscanner (1.0-rc2) buster bullseye bookworm; urgency=low
+alternc-cmsscanner (1.0-rc3) buster bullseye bookworm; urgency=low
 
   * fix history not detecting vhosts changes properly
   * fix history display not showing vhost changes
