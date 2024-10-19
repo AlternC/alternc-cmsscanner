@@ -24,7 +24,7 @@ CREATE TABLE IF NOT EXISTS `cmsscanner` (
   `oldvhosts` TEXT NOT NULL default '',
   PRIMARY KEY (`id`),
   KEY `uid` (`uid`),
-  KEY `cdate` (`cdate`)
+  KEY `sdate` (`sdate`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 INSERT IGNORE INTO variable SET name='cmsscanner_cron', value=3, comment='shall we update the list of hosted software on the server automatically (0=no, 1=daily, 2=weekly, 3=monthly)';
