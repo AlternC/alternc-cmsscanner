@@ -3,6 +3,7 @@
 case "$1" in
   configure)
 
+    chown alterncpanel /var/lib/alternc/panel || true
     echo "Installing mysql table"
     mysql --defaults-file=/etc/alternc/my.cnf -f < /usr/share/alternc/install/cmsscanner.sql || true
     echo "Compiling locales"
@@ -17,7 +18,7 @@ case "$1" in
     echo "Restarting Apache"
     # (known to crash when using outdated locales)
     service apache2 restart
-    
+
     ;;
 
   abort-upgrade|abort-remove|abort-deconfigure)
