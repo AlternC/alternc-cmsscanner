@@ -1,3 +1,10 @@
+alternc-cmsscanner (1.0~rc1) buster bullseye bookworm; urgency=low
+
+  * All initial features working fine, scanner ok, update ok, vhosts ok
+  * History of software versions & vhosts is now available too.
+
+ -- Benjamin Sonntag <benjamin@sonntag.fr>  Sat, 19 Oct 2024 13:20:00 +0200
+
 alternc-cmsscanner (0.0.2) buster bullseye bookworm; urgency=low
 
   * Change the CMSScanner, upgrade the presentation, add the background job.
