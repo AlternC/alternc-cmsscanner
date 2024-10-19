@@ -1,0 +1,166 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR AlternC Team
+# This file is distributed under the same license as the AlternC package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: AlternC 2.0\n"
+"Report-Msgid-Bugs-To: i18n@alternc.org\n"
+"POT-Creation-Date: 2024-10-19 10:27+0200\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: fr_FR\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: ../admin/adminmenu_cmsscanner.php:1
+msgid "Software Scanner Server-wide"
+msgstr "Scan des logiciels sur tout le serveur"
+
+#: ../admin/cmsscanner_admin.php:34
+msgid "This page is restricted to authorized staff"
+msgstr ""
+
+#: ../admin/cmsscanner_admin.php:65 ../admin/cmsscanner_user.php:51
+#: ../class/m_cmsscanner.php:46
+msgid "Software Scanner"
+msgstr "Scan des logiciels"
+
+#: ../admin/cmsscanner_admin.php:68 ../admin/cmsscanner_user.php:54
+msgid ""
+"Your software list will be updated soon. Please come back in a few minutes."
+msgstr "La liste des logiciels va être mise à jour sous peu. Merci de revenir dans quelques minutes."
+
+#: ../admin/cmsscanner_admin.php:72
+msgid ""
+"This page show the hosted software that we detected on your server, along "
+"with their versions, to help your users to clean their web space and update "
+"software that would need it. If you want to rescan your entire server, click "
+"the 'rescan now' button. The rescan will take place 5 minutes later and may "
+"take a few minutes."
+msgstr "Cette page vous montre la liste des logiciels hébergés détectés sur votre serveur, accompagné de leur versions, pour aider vos utilisateurs-trices à nettoyer leur espace web et mettre à jour les logiciels qui en ont besoin. Si vous souhaitez rescanner le serveur en entier, cliquez le bouton 'Scanner maintenant'. Le scan sera lancé dans les 5 minutes et pourra prendre quelques minutes."
+
+#: ../admin/cmsscanner_admin.php:78 ../admin/cmsscanner_user.php:64
+msgid "Rescan now"
+msgstr "Scanner maintenant"
+
+#: ../admin/cmsscanner_admin.php:79 ../admin/cmsscanner_user.php:65
+msgid "View software history"
+msgstr "Voir l'historique des logiciels"
+
+#: ../admin/cmsscanner_admin.php:86
+msgid "-- Filter on Software Name --"
+msgstr "-- Filtrer sur le nom du logiciel --"
+
+#: ../admin/cmsscanner_admin.php:93
+msgid "Filter"
+msgstr "Filtrer"
+
+#: ../admin/cmsscanner_admin.php:100 ../admin/cmsscanner_admin_history.php:49
+msgid "Account"
+msgstr "Compte"
+
+#: ../admin/cmsscanner_admin.php:101 ../admin/cmsscanner_admin_history.php:52
+#: ../admin/cmsscanner_history.php:48 ../admin/cmsscanner_user.php:72
+msgid "Software"
+msgstr "Logiciel"
+
+#: ../admin/cmsscanner_admin.php:102 ../admin/cmsscanner_admin_history.php:53
+#: ../admin/cmsscanner_history.php:49 ../admin/cmsscanner_user.php:73
+msgid "Version"
+msgstr "Version"
+
+#: ../admin/cmsscanner_admin.php:103 ../admin/cmsscanner_admin_history.php:54
+#: ../admin/cmsscanner_history.php:50 ../admin/cmsscanner_user.php:74
+msgid "Path"
+msgstr "Chemin"
+
+#: ../admin/cmsscanner_admin.php:104 ../admin/cmsscanner_admin_history.php:55
+#: ../admin/cmsscanner_history.php:51 ../admin/cmsscanner_user.php:75
+msgid "Hosted at"
+msgstr "Hébergé à"
+
+#: ../admin/cmsscanner_admin.php:105 ../admin/cmsscanner_user.php:76
+msgid "Scanned date"
+msgstr "Scanné le"
+
+#: ../admin/cmsscanner_admin.php:112 ../admin/cmsscanner_admin_history.php:62
+msgid "Connect as"
+msgstr "Connecter sous"
+
+#: ../admin/cmsscanner_admin.php:127 ../admin/cmsscanner_admin_history.php:65
+#: ../admin/cmsscanner_history.php:58 ../admin/cmsscanner_user.php:95
+#, php-format
+msgid "%3$d-%2$d-%1$d %4$d:%5$d"
+msgstr ""
+
+#: ../admin/cmsscanner_admin_history.php:36 ../admin/cmsscanner_history.php:35
+msgid "Detected"
+msgstr "Détecté"
+
+#: ../admin/cmsscanner_admin_history.php:36 ../admin/cmsscanner_history.php:35
+msgid "Removed"
+msgstr "Supprimé"
+
+#: ../admin/cmsscanner_admin_history.php:36 ../admin/cmsscanner_history.php:35
+msgid "Updated"
+msgstr "Mise à jour"
+
+#: ../admin/cmsscanner_admin_history.php:36 ../admin/cmsscanner_history.php:35
+msgid "Vhosts change"
+msgstr "Changement d'hébergement"
+
+#: ../admin/cmsscanner_admin_history.php:39 ../admin/cmsscanner_history.php:38
+msgid "Software Scanner History"
+msgstr "Historique des logiciels installés"
+
+#: ../admin/cmsscanner_admin_history.php:40
+msgid ""
+"This page show the 6-months history of changes we saw in the hosted software "
+"detected on your server, along with their version."
+msgstr "Cette page montre l'historique des 6 derniers mois des changements que nous avons détecté sur les logiciels installés sur ce serveur, ainsi que leur version."
+
+#: ../admin/cmsscanner_admin_history.php:43 ../admin/cmsscanner_history.php:41
+msgid "View current software list"
+msgstr "Voir la liste actuelle des logiciels"
+
+#: ../admin/cmsscanner_admin_history.php:50 ../admin/cmsscanner_history.php:46
+msgid "Date of change"
+msgstr "Date du changement"
+
+#: ../admin/cmsscanner_admin_history.php:51 ../admin/cmsscanner_history.php:47
+msgid "Change"
+msgstr "Changement"
+
+#: ../admin/cmsscanner_admin_history.php:75 ../admin/cmsscanner_history.php:68
+msgid "New version: "
+msgstr "Nouvelle version&nbsp;: "
+
+#: ../admin/cmsscanner_admin_history.php:75 ../admin/cmsscanner_history.php:68
+msgid "Old version: "
+msgstr "Ancienne version&nsbp;: "
+
+#: ../admin/cmsscanner_admin_history.php:83 ../admin/cmsscanner_history.php:77
+msgid "Old vhosts: "
+msgstr "Ancienne URL&nbsp;:"
+
+#: ../admin/cmsscanner_admin_history.php:84 ../admin/cmsscanner_history.php:78
+msgid "New vhosts: "
+msgstr "Nouvelle URL&nbsp;: "
+
+#: ../admin/cmsscanner_history.php:39
+msgid ""
+"This page show the 6-months history of changes we saw in the hosted software "
+"detected on your account, along with their version."
+msgstr "Cette page montre l'historique des 6 derniers mois des changements que nous avons détecté sur les logiciels installés sur votre compte, ainsi que leur version."
+
+#: ../admin/cmsscanner_user.php:58
+msgid ""
+"This page show the hosted software that we detected on your account, along "
+"with their versions, to help you cleaning your web space and update software "
+"that would need it. If you want to rescan your account, click the 'rescan "
+"now' button. The rescan will take place 5 minutes later."
+msgstr "Cette page vous montre la liste des logiciels hébergés détectés sur votre compte, accompagné de leur versions, pour vous aider à nettoyer votre espace web et mettre à jour les logiciels qui en ont besoin. Si vous souhaitez rescanner votre compte, cliquez le bouton 'Scanner maintenant'. Le scan sera lancé dans les 5 minutes."

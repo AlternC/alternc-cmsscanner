@@ -9,7 +9,9 @@ Standards-Version: 3.9.8
 
 Package: alternc-cmsscanner
 Architecture: all
-Depends: alternc (>= 3.3), cmsscanner
+Depends: alternc (>= 3.3)
+       , cmsscanner
+       , gettext (>= 0.10.40-5)
 Description: Scan CMS hosted by AlternC
  AlternC is a mutualized hosting software manager for Linux.
  It allows you to manage your websites, domains, ftp, emails, aliases,
