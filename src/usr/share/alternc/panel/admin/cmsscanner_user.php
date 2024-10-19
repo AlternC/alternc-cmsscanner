@@ -28,7 +28,6 @@
  ----------------------------------------------------------------------
 */
 require_once("../class/config.php");
-include("head.php");
 
 $updated=(isset($_GET["updated"]) && $_GET["updated"]==1);
 if (isset($_POST["action"]) && $_POST["action"]=="rescan") {
@@ -37,6 +36,8 @@ if (isset($_POST["action"]) && $_POST["action"]=="rescan") {
         exit();
     }
 }
+
+include("head.php");
 
 $list = $cmsscanner->get_list($cuid);
 

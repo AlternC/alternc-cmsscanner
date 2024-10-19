@@ -122,7 +122,7 @@ class m_cmsscanner {
                 if (!is_array($scan)) $scan=[];
             }
             if (!in_array($cuid,$scan)) {
-                $scan[]=$cuid;
+                $scan[]=intval($cuid);
                 file_put_contents(self::USER_SCAN_FILE,json_encode($scan));
             } else {
                 return false;
@@ -154,7 +154,6 @@ class m_cmsscanner {
                 while($db->next_record()) $uids[]=$db->Record["uid"];
                 foreach($uids as $uid) {
                     $this->scan_cms($uid);
-                    $this->scan_vhosts($uid);
                 }
                 // now purge any information on non-existing account.
                 $db->query("DELETE c FROM cmsscanner c LEFT JOIN membres u ON u.uid=c.uid WHERE u.uid IS NULL;");
@@ -172,7 +171,6 @@ class m_cmsscanner {
             $users=@json_decode(file_get_contents(self::USER_SCAN_FILE),true);
             foreach($users as $one) {
                 $this->scan_cms($one);
-                $this->scan_vhost($one);
             }
             unlink(self::USER_SCAN_FILE);
         }
@@ -211,7 +209,8 @@ class m_cmsscanner {
                     // but only 1 VERSION
                     $f=substr($mat[3],strlen($root));
                     if (!$f) $f="/"; // CMS at the root!
-                    $cms[$f][]=[$mat[1],$mat[2]];
+                    $vhosts = $this->scan_vhosts($user,$f);
+                    $cms[$f][]=[$mat[1],$mat[2],$vhosts];
                 }
             }
         }
@@ -220,7 +219,7 @@ class m_cmsscanner {
         $db->query("SELECT * FROM cmsscanner WHERE uid=$user;");
         $cur=[];
         while ($db->next_record()) {
-            $cur[$db->Record["folder"]][]=[$db->Record["cms"],$db->Record["version"]];
+            $cur[$db->Record["folder"]][]=[$db->Record["cms"],$db->Record["version"],$db->Record["vhosts"]];
         }
 
         // here $cms contains the current list & $cur the list in the DB
@@ -230,26 +229,31 @@ class m_cmsscanner {
         foreach($cms as $folder => $l) {
             // does it exist in the DB?
             foreach($l as $cmsi) {
-                $found=false; $isupdate=false;
+                $found=false; $updateversion=false; $updatevhosts=false;
+                $oldversion=""; $oldvhosts="";
                 if (isset($cur[$folder])) {
                     foreach($cur[$folder] as $curi) {
-                        if ($cmsi[0]==$curi[0]) {
-                            if ($cmsi[1]==$curi[1]) {
-                                $found=true; break;
-                            } else {
+                        if ($cmsi[0]==$curi[0]) { // same software?
+                            if ($cmsi[1]==$curi[1]) { // same version ? 
+                                $found=true; 
+                            } else { // different version ? 
                                 // will fill history with a VERSION UPDATE event.
-                                $isupdate=true;
+                                $updateversion=true;
                                 $oldversion=$curi[1];
+                            }
+                            if ($cmsi[2]!=$curi[2]) { // different vhosts?
+                                $updatevhosts=true;
+                                $oldvhosts=$curi[2];
                             }
                         }
                     }
                 }
                 if (!$found) {
-                    $db->query("INSERT INTO cmsscanner SET uid=$user, folder='".addslashes($folder)."', cms='".addslashes($cmsi[0])."', version='".addslashes($cmsi[1])."';");
-                    if ($isupdate) {
-                        $db->query("INSERT INTO cmsscanner_history SET uid=$user, folder='".addslashes($folder)."', cms='".addslashes($cmsi[0])."', version='".addslashes($cmsi[1])."', action=".self::ACTION_UPDATE.",oldversion='".addslashes($oldversion)."';");
+                    $db->query("INSERT INTO cmsscanner SET uid=$user, folder='".addslashes($folder)."', cms='".addslashes($cmsi[0])."', version='".addslashes($cmsi[1])."', vhosts='".addslashes($cmsi[2])."';");
+                    if ($updateversion || $updatevhosts) {
+                        $db->query("INSERT INTO cmsscanner_history SET uid=$user, folder='".addslashes($folder)."', cms='".addslashes($cmsi[0])."', version='".addslashes($cmsi[1])."', action=".self::ACTION_UPDATE.",oldversion='".addslashes($oldversion)."', oldvhosts='".addslashes($oldvhosts)."';");
                     } else {
-                        $db->query("INSERT INTO cmsscanner_history SET uid=$user, folder='".addslashes($folder)."', cms='".addslashes($cmsi[0])."', version='".addslashes($cmsi[1])."', action=".self::ACTION_INSERT.";");
+                        $db->query("INSERT INTO cmsscanner_history SET uid=$user, folder='".addslashes($folder)."', cms='".addslashes($cmsi[0])."', version='".addslashes($cmsi[1])."', action=".self::ACTION_INSERT.", vhosts='".addslashes($cmsi[2])."';");
                     }
 }
             }
@@ -282,43 +286,28 @@ class m_cmsscanner {
         
         return true;
         // we will update the vhosts pointing there in ANOTHER function (because that's complicated)
-    } // do_scan
+    } // scan_cms
 
 
     
     /* ----------------------------------------------------------------- */
     /**
-     * update one user's list of cms found to fill the "vhost" field.
-     * only update what's necessary.
-     * should be called as alterncpanel by the cron function.
+     * get the list of vhosts that point to a folder
      */
-    function scan_vhosts($user) {
+    function scan_vhosts($user,$dir) {
         global $db;
-        $user=intval($user);
-        $db->query("SELECT * FROM cmsscanner WHERE uid=$user;");
-        $list=[];
+        $vhosts=[];
+        // this query is complicated. It searches for vhosts pointing to the folder where we found a CMS.
+        // the LIKE is inverted: we search "valeur" values (so: a directory) that BEGINS with the CMS folder path, so the CMS is either at or below this URL.
+        $db->query("SELECT sd.sub,d.domaine,sd.valeur FROM sub_domaines sd, domaines d, domaines_type dt WHERE sd.domaine=d.domaine AND d.compte=$user AND dt.name=sd.type AND dt.target='DIRECTORY' AND '".addslashes(rtrim($dir,'/').'/')."' LIKE CONCAT(sd.valeur,'%');");
         while ($db->next_record()) {
-            $list[]=$db->Record;
+            $dir=ltrim(substr($db->Record["valeur"],strlen(rtrim($dir,"/"))),'/'); // search the subfolder
+            $vhosts[]=$db->Record['sub'].(($db->Record['sub'])?".":"").$db->Record["domaine"]."/".$dir;
         }
-        foreach($list as $one) {
-            $vhosts=[];
-            // this query is complicated. It searches for vhosts pointing to the folder where we found a CMS.
-            // the LIKE is inverted: we search "valeur" values (so: a directory) that BEGINS with the CMS folder path, so the CMS is either at or below this URL.
-            $db->query("SELECT sd.sub,d.domaine,sd.valeur FROM sub_domaines sd, domaines d, domaines_type dt WHERE sd.domaine=d.domaine AND d.compte=$user AND dt.name=sd.type AND dt.target='DIRECTORY' AND '".addslashes(rtrim($one["folder"],'/').'/')."' LIKE CONCAT(sd.valeur,'%');");
-            while ($db->next_record()) {
-                $dir=ltrim(substr($db->Record["valeur"],strlen(rtrim($one["folder"],"/"))),'/'); // search the subfolder
-                $vhosts[]=$db->Record['sub'].(($db->Record['sub'])?".":"").$db->Record["domaine"]."/".$dir;
-            }
-            sort($vhosts);
-            $vhosts=implode("\n",$vhosts);
-            if ($vhosts!=$one["vhosts"]) {
-                $db->query("UPDATE cmsscanner SET vhosts='".addslashes($vhosts)."' WHERE id=".$one["id"].";");
-                $db->query("INSERT INTO cmsscanner_history SET uid=$user, folder='".addslashes($one['folder'])."', cms='".addslashes($one['cms'])."', version='".addslashes($one['version'])."', action=".self::ACTION_VHOSTS.",oldversion='', oldvhosts='".addslashes($one['vhosts'])."', vhosts='".addslashes($vhosts)."';");
-            }
-            
-        } // for each cms
-        
-    } // scan_vhosts
+        sort($vhosts);
+        $vhosts=implode("\n",$vhosts);
+        return $vhosts;
+    }
     
 
 
