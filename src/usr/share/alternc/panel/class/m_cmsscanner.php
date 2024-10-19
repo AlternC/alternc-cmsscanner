@@ -263,7 +263,7 @@ class m_cmsscanner {
         foreach($cur as $folder => $l) {
             // does it exist in the DB?
             foreach($l as $curi) {
-                $found=false;
+                $found=false; $isupdate=false;
                 if (isset($cms[$folder])) {
                     foreach($cms[$folder] as $cmsi) {
                         if ($cmsi[0]==$curi[0]) {
