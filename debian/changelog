@@ -1,4 +1,4 @@
-alternc-cmsscanner (1.0~rc1) buster bullseye bookworm; urgency=low
+alternc-cmsscanner (1.0-rc1) buster bullseye bookworm; urgency=low
 
   * All initial features working fine, scanner ok, update ok, vhosts ok
   * History of software versions & vhosts is now available too.
