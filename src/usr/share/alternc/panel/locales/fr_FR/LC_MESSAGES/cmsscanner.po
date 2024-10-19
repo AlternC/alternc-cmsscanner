@@ -141,7 +141,7 @@ msgstr "Nouvelle version&nbsp;: "
 
 #: ../admin/cmsscanner_admin_history.php:75 ../admin/cmsscanner_history.php:68
 msgid "Old version: "
-msgstr "Ancienne version&nsbp;: "
+msgstr "Ancienne version&nbsp;: "
 
 #: ../admin/cmsscanner_admin_history.php:83 ../admin/cmsscanner_history.php:77
 msgid "Old vhosts: "
