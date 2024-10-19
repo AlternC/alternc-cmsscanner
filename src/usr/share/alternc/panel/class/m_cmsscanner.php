@@ -32,7 +32,6 @@ class m_cmsscanner {
     const ACTION_INSERT=0;
     const ACTION_UPDATE=1;
     const ACTION_DELETE=2;
-    const ACTION_VHOSTS=3;
     
     public $cmslist=[];
     
@@ -95,11 +94,11 @@ class m_cmsscanner {
         if ($user==0) {
             $fields=",m.login";
             $sql=", membres m  WHERE m.uid=c.uid ";
-            $order="m.login, ";
+            $order=",m.login ";
         } else {
             $sql=" WHERE c.uid=".intval($user)." ";            
         }
-        $db->query("SELECT c.* $fields FROM cmsscanner_history c $sql ORDER BY $order c.sdate DESC;");
+        $db->query("SELECT c.* $fields FROM cmsscanner_history c $sql ORDER BY c.sdate DESC $order;");
         $cms=[];
         while ($db->next_record()) $cms[]=$db->Record;
         return $cms;
@@ -251,11 +250,18 @@ class m_cmsscanner {
                 if (!$found) {
                     $db->query("INSERT INTO cmsscanner SET uid=$user, folder='".addslashes($folder)."', cms='".addslashes($cmsi[0])."', version='".addslashes($cmsi[1])."', vhosts='".addslashes($cmsi[2])."';");
                     if ($updateversion || $updatevhosts) {
-                        $db->query("INSERT INTO cmsscanner_history SET uid=$user, folder='".addslashes($folder)."', cms='".addslashes($cmsi[0])."', version='".addslashes($cmsi[1])."', action=".self::ACTION_UPDATE.",oldversion='".addslashes($oldversion)."', oldvhosts='".addslashes($oldvhosts)."';");
+                        $db->query("INSERT INTO cmsscanner_history SET uid=$user, folder='".addslashes($folder)."', cms='".addslashes($cmsi[0])."', version='".addslashes($cmsi[1])."', action=".self::ACTION_UPDATE.", vhosts='".addslashes($cmsi[2])."', oldversion='".addslashes($oldversion)."', oldvhosts='".addslashes($oldvhosts)."';");
                     } else {
                         $db->query("INSERT INTO cmsscanner_history SET uid=$user, folder='".addslashes($folder)."', cms='".addslashes($cmsi[0])."', version='".addslashes($cmsi[1])."', action=".self::ACTION_INSERT.", vhosts='".addslashes($cmsi[2])."';");
                     }
-}
+                } else {
+                    // software found, but vhost or version may have changed
+                    if ($updateversion || $updatevhosts) {
+                        $db->query("INSERT INTO cmsscanner_history SET uid=$user, folder='".addslashes($folder)."', cms='".addslashes($cmsi[0])."', version='".addslashes($cmsi[1])."', action=".self::ACTION_UPDATE.", vhosts='".addslashes($cmsi[2])."', oldversion='".addslashes($oldversion)."', oldvhosts='".addslashes($oldvhosts)."';");
+                        $db->query("UPDATE cmsscanner SET version='".addslashes($cmsi[1])."', vhosts='".addslashes($cmsi[2])."' WHERE uid=$user AND folder='".addslashes($folder)."' AND cms='".addslashes($cmsi[0])."';");
+                    }
+                }
+                
             }
         } // array compare from cms to cur (insert)
 
@@ -301,8 +307,8 @@ class m_cmsscanner {
         // the LIKE is inverted: we search "valeur" values (so: a directory) that BEGINS with the CMS folder path, so the CMS is either at or below this URL.
         $db->query("SELECT sd.sub,d.domaine,sd.valeur FROM sub_domaines sd, domaines d, domaines_type dt WHERE sd.domaine=d.domaine AND d.compte=$user AND dt.name=sd.type AND dt.target='DIRECTORY' AND '".addslashes(rtrim($dir,'/').'/')."' LIKE CONCAT(sd.valeur,'%');");
         while ($db->next_record()) {
-            $dir=ltrim(substr($db->Record["valeur"],strlen(rtrim($dir,"/"))),'/'); // search the subfolder
-            $vhosts[]=$db->Record['sub'].(($db->Record['sub'])?".":"").$db->Record["domaine"]."/".$dir;
+            $subdir=ltrim(substr($db->Record["valeur"],strlen(rtrim($dir,"/"))),'/'); // search the subfolder
+            $vhosts[]=$db->Record['sub'].(($db->Record['sub'])?".":"").$db->Record["domaine"]."/".$subdir;
         }
         sort($vhosts);
         $vhosts=implode("\n",$vhosts);

@@ -65,7 +65,7 @@ $changes=[0=>_("Detected"), 1=>_("Updated"), 2=>_("Removed"), 3=>_("Vhosts chang
             </td>
             <td>
                 <?php
-                 if ($one['action']==$cmsscanner::ACTION_UPDATE) echo _("Old version: ").$one['oldversion']."<br/>"._("New version: ");
+                 if ($one['action']==$cmsscanner::ACTION_UPDATE && $one['oldversion']) echo _("Old version: ").$one['oldversion']."<br/>"._("New version: ");
                  echo $one['version']; ?>
             </td>
             <td>
@@ -73,7 +73,7 @@ $changes=[0=>_("Detected"), 1=>_("Updated"), 2=>_("Removed"), 3=>_("Vhosts chang
             </td>
 
 <?php
-                  if ($one['action']==$cmsscanner::ACTION_VHOSTS) {
+                  if ($one['action']==$cmsscanner::ACTION_UPDATE && $one['oldvhosts']) {
                       echo "<td>"._("Old vhosts: ")."<br>".nl2br($one['oldvhosts'])."</td>";
                       echo "<td>"._("New vhosts: ")."<br>".nl2br($one['vhosts'])."</td>";
                   } else {
