@@ -1,18 +1,18 @@
-alternc-cmsscanner (1.0-rc3) buster bullseye bookworm; urgency=low
+alternc-cmsscanner (1.0~rc3) buster bullseye bookworm; urgency=low
 
   * fix history not detecting vhosts changes properly
   * fix history display not showing vhost changes
 
  -- Benjamin Sonntag <benjamin@sonntag.fr>  Sat, 19 Oct 2024 21:07:00 +0200
 
-alternc-cmsscanner (1.0-rc2) buster bullseye bookworm; urgency=low
+alternc-cmsscanner (1.0~rc2) buster bullseye bookworm; urgency=low
 
   * fix /var/lib/alternc/panel shall be owned by alterncpanel
   * fix wrong field name in cmsscanner.sql
 
  -- Benjamin Sonntag <benjamin@sonntag.fr>  Sat, 19 Oct 2024 15:02:00 +0200
 
-alternc-cmsscanner (1.0-rc1) buster bullseye bookworm; urgency=low
+alternc-cmsscanner (1.0~rc1) buster bullseye bookworm; urgency=low
 
   * All initial features working fine, scanner ok, update ok, vhosts ok
   * History of software versions & vhosts is now available too.
