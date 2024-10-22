@@ -1,3 +1,9 @@
+alternc-cmsscanner (1.0~rc4) buster bullseye bookworm; urgency=low
+
+  * fix a bug in the mass vhosts matching SQL code
+
+ -- Benjamin Sonntag <benjamin@sonntag.fr>  Mon, 21 Oct 2024 21:35:00 +0200
+
 alternc-cmsscanner (1.0~rc3) buster bullseye bookworm; urgency=low
 
   * fix history not detecting vhosts changes properly

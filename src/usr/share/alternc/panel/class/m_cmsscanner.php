@@ -305,7 +305,9 @@ class m_cmsscanner {
         $vhosts=[];
         // this query is complicated. It searches for vhosts pointing to the folder where we found a CMS.
         // the LIKE is inverted: we search "valeur" values (so: a directory) that BEGINS with the CMS folder path, so the CMS is either at or below this URL.
-        $db->query("SELECT sd.sub,d.domaine,sd.valeur FROM sub_domaines sd, domaines d, domaines_type dt WHERE sd.domaine=d.domaine AND d.compte=$user AND dt.name=sd.type AND dt.target='DIRECTORY' AND '".addslashes(rtrim($dir,'/').'/')."' LIKE CONCAT(sd.valeur,'%');");
+        // we force a / at the end of valeur too, so that a longer string in $dir does NOT match a shorter in valeur
+        // (eg: /www/dolibarr.old will NOT match /www/dolibarr since we add a / at the end of it) 
+        $db->query("SELECT sd.sub,d.domaine,sd.valeur FROM sub_domaines sd, domaines d, domaines_type dt WHERE sd.domaine=d.domaine AND d.compte=$user AND dt.name=sd.type AND dt.target='DIRECTORY' AND '".addslashes(rtrim($dir,'/').'/')."' LIKE CONCAT(TRIM(TRAILING '/' FROM sd.valeur),'/%');");
         while ($db->next_record()) {
             $subdir=ltrim(substr($db->Record["valeur"],strlen(rtrim($dir,"/"))),'/'); // search the subfolder
             $vhosts[]=$db->Record['sub'].(($db->Record['sub'])?".":"").$db->Record["domaine"]."/".$subdir;
