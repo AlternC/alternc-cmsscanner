@@ -1,4 +1,7 @@
 
+-- this SQL script is launched at postinstall time. It should ideally be idempotent,
+-- and bring the user to the latest version wherever it came from.
+
 CREATE TABLE IF NOT EXISTS `cmsscanner` (
   `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT,
   `cms` varchar(128) NOT NULL,
@@ -11,7 +14,7 @@ CREATE TABLE IF NOT EXISTS `cmsscanner` (
   KEY `uid` (`uid`,`folder`) USING BTREE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='List of php software found in the server';
 
- CREATE TABLE `cmsscanner_history` (
+CREATE TABLE IF NOT EXISTS `cmsscanner_history` (
   `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `sdate` datetime NOT NULL DEFAULT current_timestamp(),
   `cms` varchar(128) NOT NULL,
@@ -30,4 +33,6 @@ CREATE TABLE IF NOT EXISTS `cmsscanner` (
 INSERT IGNORE INTO variable SET name='cmsscanner_cron', value=3, comment='shall we update the list of hosted software on the server automatically (0=no, 1=daily, 2=weekly, 3=monthly)';
 INSERT IGNORE INTO variable SET name='cmsscanner_checkerapi', value='https://cmschecker.octopuce.fr/', comment='If not null, use this API url (should end by /) to check software version and SHA256 sums.';
 
+-- arrived at 1.0~rc4
 ALTER TABLE cmsscanner_history CHANGE `oldversion` `oldversion` varchar(255) NOT NULL DEFAULT '';
+
