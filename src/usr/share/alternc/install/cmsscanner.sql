@@ -30,3 +30,4 @@ CREATE TABLE IF NOT EXISTS `cmsscanner` (
 INSERT IGNORE INTO variable SET name='cmsscanner_cron', value=3, comment='shall we update the list of hosted software on the server automatically (0=no, 1=daily, 2=weekly, 3=monthly)';
 INSERT IGNORE INTO variable SET name='cmsscanner_checkerapi', value='https://cmschecker.octopuce.fr/', comment='If not null, use this API url (should end by /) to check software version and SHA256 sums.';
 
+ALTER TABLE cmsscanner_history CHANGE `oldversion` `oldversion` varchar(255) NOT NULL DEFAULT '';
